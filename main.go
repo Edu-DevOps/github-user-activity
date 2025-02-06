@@ -22,7 +22,7 @@ func main() {
 	fmt.Println(getEvents(user, gitToken))
 }
 
-func getEvents (user string, gitToken string) ([]models.Events, error) {
+func getEvents (user string, gitToken string) (models.Events, error) {
 	eventsEndpoint := "https://api.github.com/users/" + user + "/events"
 	req, err := http.NewRequest(http.MethodGet, eventsEndpoint, nil)
 	req.Header.Add("Authorization", "Bearer " + gitToken)
@@ -39,7 +39,7 @@ func getEvents (user string, gitToken string) ([]models.Events, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error reading body: %v", err)
 	}
-	var response []models.Events
+	var response models.Events
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		return nil, fmt.Errorf("Error unmarshaling JSON: %v", err)

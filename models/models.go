@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 )
-type Events struct {
+type Events []struct {
 	ID    string `json:"id"`
 	Type  string `json:"type"`
 	Actor struct {

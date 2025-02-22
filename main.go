@@ -18,8 +18,41 @@ var (
 func main() {
 	flag.StringVar(&user, "user", "", "Github username")
 	flag.Parse()
+	if user == "" {
+		fmt.Println("--user flag is required")
+		os.Exit(1)
+	}
+
 	gitToken := os.Getenv("GITHUB_TOKEN")
-	fmt.Println(getEvents(user, gitToken))
+	events, _ := getEvents(user, gitToken)
+	translatedEvents, _ := translateEvents(events)
+	outputInit := "Output:"
+	fmt.Println(outputInit)
+	for index := range translatedEvents {
+		outputBody := "  - " + translatedEvents[index].Type + ": "
+		if translatedEvents[index].Type == "Suggestion Applied" {
+			outputBody := outputBody + "\n    URL: " + translatedEvents[index].Payload.PullRequest.URL
+			fmt.Println(outputBody)
+		}
+		if translatedEvents[index].Type == "PR Review Requested" {
+			outputBody := outputBody + "\n    URL: " + translatedEvents[index].Payload.PullRequest.URL
+			fmt.Println(outputBody)
+		}
+		if translatedEvents[index].Type == "Repository Created" {
+			outputBody := outputBody + "\n    Repository: " + translatedEvents[index].Repo.URL
+			fmt.Println(outputBody)
+		}
+		if translatedEvents[index].Type == "Branch Created" {
+			outputBody := outputBody + "\n    Branch: " + translatedEvents[index].Payload.Ref
+			fmt.Println(outputBody)
+		}
+		if translatedEvents[index].Type == "Push" {
+			for i := range translatedEvents[index].Payload.Commits {
+				outputBody := outputBody + "\n    Commit: " + translatedEvents[index].Payload.Commits[i].URL
+				fmt.Println(outputBody)
+			}
+		}
+	}
 }
 
 func getEvents (user string, gitToken string) (models.Events, error) {
@@ -45,4 +78,26 @@ func getEvents (user string, gitToken string) (models.Events, error) {
 		return nil, fmt.Errorf("Error unmarshaling JSON: %v", err)
 	}
 	return response, nil
+}
+
+func translateEvents (events models.Events) (models.Events, error) {
+	for index := range events {
+		if events[index].Type == "PushEvent" {
+			events[index].Type = "Push"
+		}
+		if events[index].Type == "PullRequestReviewCommentEvent" {
+			events[index].Type = "Suggestion Applied"
+		}
+		if events[index].Type == "PullRequestReviewEvent" {
+			events[index].Type = "PR Review Requested"
+		}
+		if events[index].Type == "CreateEvent" {
+			if events[index].Payload.RefType == "branch" {
+				events[index].Type = "Branch Created"
+			} else if events[index].Payload.RefType == "repository" {
+				events[index].Type = "Repository Created"
+			}
+		}
+	}
+	return events, nil
 }

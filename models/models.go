@@ -27,6 +27,10 @@ type Events []struct {
 		Ref          string `json:"ref"`
 		Head         string `json:"head"`
 		Before       string `json:"before"`
+		RefType      string `json:"ref_type"`
+		PullRequest struct {
+			URL string `json:"url"`
+		} `json:"pull_request"`
 		Commits      []struct {
 			Sha    string `json:"sha"`
 			Author struct {
